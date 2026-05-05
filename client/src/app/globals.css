@@ -121,57 +121,45 @@
 
   body {
     @apply bg-background text-foreground;
-
   }
 
-  .blurSpot {
+  .carteingrid {
     position: absolute;
-    width: 400px;
-    height: 400px;
-    top: -21.83px;
-    right: 0;
-    background-color: rgba(252, 22, 91, 1);
-    filter: blur(3500px);
-  }
-
-  .blurSpot2 {
-    position: absolute;
-    width: 200px;
-    height: 200px;
-    top: 57.48px;
-    left: 210.15px;
-    background-color: rgba(22, 252, 210, 1);
-    filter: blur(3500px);
-  }
-
-  .blurSpot3 {
-    position: absolute;
-    width: 400px;
-    height: 400px;
-    bottom: 0;
+    top: 0;
     left: 0;
-    background-color: rgba(27, 119, 228, 1);
-    filter: blur(3500px);
+    right: 0;
+    bottom: 0;
+    background-image:
+      linear-gradient(to right, rgba(120, 120, 120, 0.2) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(120, 120, 120, 0.2) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(circle at center, black, transparent 90%);
+    pointer-events: none;
+    z-index: -1;
   }
 
-  @media screen and (max-width: 480px) {
-    .blurSpot {
-      width: 150px;
-      height: 150px;
-      filter: blur(300px);
-    }
-
-    .blurSpot2 {
-      width: 150px;
-      height: 150px;
-      filter: blur(300px);
-    }
-
-    .blurSpot3 {
-      width: 150px;
-      height: 150px;
-      filter: blur(300px);
-    }
+  .carteingrid::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 300px;
+    background: linear-gradient(to bottom, rgba(120, 120, 120, 0.2), transparent);
+    pointer-events: none;
   }
+
+  .dark .carteingrid {
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+  }
+
+  .dark .carteingrid::before {
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), transparent);
+  }
+
+
+
 
 }

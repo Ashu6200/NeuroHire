@@ -6,24 +6,24 @@ const Hero = ({hero, features}) => {
   return (
     <>
       {/* Hero */}
-      <div>
-        <div className="mx-auto px-4 py-16 md:px-12 lg:py-24 2xl:max-w-[1400px]">
+      <div className="relative overflow-hidden">
+        <div className="mx-auto px-4 py-12 sm:px-6 md:px-12 lg:py-24 2xl:max-w-[1400px]">
           {/* Title */}
           <div className="mx-auto mt-5 max-w-2xl text-center">
-            <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
+            <h1 className="scroll-m-20 text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl">
              {hero.title}
             </h1>
           </div>
           {/* End Title */}
           <div className="mx-auto mt-5 max-w-3xl text-center">
-            <p className="text-muted-foreground text-xl">
+            <p className="text-muted-foreground text-lg sm:text-xl">
              {hero.description}
             </p>
           </div>
           {/* Buttons */}
-          <div className="mt-8 flex justify-center gap-3">
-            <Button size={"lg"}>{hero.firstCTA}</Button>
-            <Button size={"lg"} variant={"outline"}>
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Button size={"lg"} className="w-full sm:w-auto">{hero.firstCTA}</Button>
+            <Button size={"lg"} variant={"outline"} className="w-full sm:w-auto">
              {hero.secondCTA}
             </Button>
           </div>

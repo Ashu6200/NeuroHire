@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useVerifyOtpServiceMutation } from '@/store/userFeature/userService';
-import { useSelector } from 'react-redux';
+import { useSession } from '@/lib/auth-client';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
@@ -24,13 +24,14 @@ const otpSchema = yup.object().shape({
 });
 const VerifyOtp = () => {
   const router = useRouter();
-  const userStoreData = useSelector((state) => state.userStore);
-  const { user, isAuthenticated } = userStoreData;
+  const { data: session } = useSession();
+  const user = session?.user;
+  const isAuthenticated = !!session;
   useEffect(() => {
     if (isAuthenticated) {
       router.replace('/dashboard');
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, router]);
   const {
     handleSubmit,
     control,

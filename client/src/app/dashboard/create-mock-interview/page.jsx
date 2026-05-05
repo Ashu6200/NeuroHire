@@ -21,6 +21,9 @@ import DifficultySlider from '@/components/form/DifficultySlider';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { useCreateMockInterviewMutation } from '@/store/mockInterviewFeature/mockInterviewService';
 
 const pageHeader = {
   title: 'Create Your Mock Interview',
@@ -49,6 +52,8 @@ const experienceLevels = [
 ];
 
 const CreateMockInterview = () => {
+  const router = useRouter();
+  const [createMockInterview, { isLoading }] = useCreateMockInterviewMutation();
   const {
     register,
     handleSubmit,
@@ -74,7 +79,19 @@ const CreateMockInterview = () => {
     resolver: yupResolver(schema),
   });
 
-  const onSubmit = (data) => console.log(data);
+  const onSubmit = async (data) => {
+    try {
+      const result = await createMockInterview(data).unwrap();
+      toast.success('Mock interview created successfully!');
+      if (result?.data?.mockInterview?._id) {
+        router.push(`/dashboard/mock-interviews/${result.data.mockInterview._id}`);
+      } else {
+        router.push('/dashboard/mock-interviews');
+      }
+    } catch (error) {
+      toast.error(error?.message || 'Failed to create mock interview. Please try again.');
+    }
+  };
 
   const technicalDifficulty = watch('technicalDifficulty');
   const behavioralDifficulty = watch('behavioralDifficulty');
@@ -278,8 +295,8 @@ const CreateMockInterview = () => {
                 </div>
 
                 <div className='flex items-center gap-4 justify-end mt-8'>
-                  <Button type='submit' variant='outline'>
-                    Submit
+                  <Button type='submit' variant='outline' disabled={isLoading}>
+                    {isLoading ? 'Creating...' : 'Submit'}
                   </Button>
                   <Button
                     type='button'

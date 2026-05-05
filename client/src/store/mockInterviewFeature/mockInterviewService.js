@@ -48,6 +48,7 @@ const mockInterviewService = neuroHireApi.injectEndpoints({
     getMockInterviewQuestions: builder.query({
       query: (id) => ({
         url: `/mock-interview/${id}/questions`,
+        credentials: 'include',
       }),
       async onQueryStarted(_arg, { queryFulfilled }) {
         try {
@@ -155,6 +156,42 @@ const mockInterviewService = neuroHireApi.injectEndpoints({
         }
       },
     }),
+    getEnhancedFeedback: builder.mutation({
+      query: ({ id, resultId }) => ({
+        url: `/mock-interview/${id}/enhanced-feedback`,
+        method: 'POST',
+        body: { resultId },
+        credentials: 'include',
+      }),
+    }),
+    getSkillGap: builder.query({
+      query: ({ id, resultId }) => ({
+        url: `/mock-interview/${id}/skill-gap${resultId ? `?resultId=${resultId}` : ''}`,
+        credentials: 'include',
+      }),
+    }),
+    getJdMatch: builder.mutation({
+      query: ({ userProfile, jobDescription }) => ({
+        url: '/mock-interview/jd-match',
+        method: 'POST',
+        body: { userProfile, jobDescription },
+        credentials: 'include',
+      }),
+    }),
+    saveInterviewResult: builder.mutation({
+      query: ({ id, qa, startAt, endAt }) => ({
+        url: `/mock-interview/${id}/save-result`,
+        method: 'POST',
+        body: { qa, startAt, endAt },
+        credentials: 'include',
+      }),
+    }),
+    getInterviewResults: builder.query({
+      query: (id) => ({
+        url: `/mock-interview/${id}/results`,
+        credentials: 'include',
+      }),
+    }),
   }),
 });
 
@@ -166,4 +203,9 @@ export const {
   useUpdateMockInterviewMutation,
   useRegenerateQuestionSetMutation,
   useDeleteMockInterviewMutation,
+  useGetEnhancedFeedbackMutation,
+  useGetSkillGapQuery,
+  useGetJdMatchMutation,
+  useSaveInterviewResultMutation,
+  useGetInterviewResultsQuery,
 } = mockInterviewService;

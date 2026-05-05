@@ -19,6 +19,11 @@ import {
     Settings,
     Briefcase,
     FileUser,
+    CreditCard,
+    ShieldCheck,
+    Receipt,
+    ScrollText,
+    Library,
 } from "lucide-react";
 
 export const navItems = [
@@ -60,9 +65,55 @@ export const SidebarItems = [
         icon: <FileUser />,
     },
     {
+        title: "Practice Questions",
+        url: "/dashboard/practice-questions",
+        icon: <Library />,
+    },
+    {
         title: "Interview History",
         url: "/dashboard/interview-history",
         icon: <History />,
+    },
+    {
+        title: "Billing",
+        url: "/dashboard/billing",
+        icon: <CreditCard />,
+    },
+    {
+        title: "Admin",
+        url: "/admin",
+        icon: <ShieldCheck />,
+        roles: ["admin", "super_admin", "support", "billing_admin"],
+    },
+    {
+        title: "Users",
+        url: "/admin/users",
+        icon: <Users />,
+        roles: ["admin", "super_admin", "support", "billing_admin"],
+    },
+    {
+        title: "Subscriptions",
+        url: "/admin/subscriptions",
+        icon: <Layers />,
+        roles: ["admin", "super_admin", "billing_admin"],
+    },
+    {
+        title: "Payments",
+        url: "/admin/payments",
+        icon: <Receipt />,
+        roles: ["admin", "super_admin", "billing_admin"],
+    },
+    {
+        title: "Usage",
+        url: "/admin/usage",
+        icon: <Activity />,
+        roles: ["admin", "super_admin", "support"],
+    },
+    {
+        title: "Audit Logs",
+        url: "/admin/ai-logs",
+        icon: <ScrollText />,
+        roles: ["admin", "super_admin"],
     },
     {
         title: "Settings",

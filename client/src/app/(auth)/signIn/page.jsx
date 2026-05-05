@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { useLoginServiceMutation } from '@/store/userFeature/userService';
 import Link from 'next/link';
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -11,8 +10,9 @@ import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { ErrorMessage } from '@hookform/error-message';
 import { toast } from 'sonner';
-import { useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { useRouter } from 'next/navigation';
+import { signIn, useSession } from '@/lib/auth-client';
 
 const signInSchema = yup.object({
   email: yup.string().email('Invalid email').required('Email is required'),
@@ -23,14 +23,15 @@ const signInSchema = yup.object({
 });
 const SignIn = () => {
   const router = useRouter();
-  const userStoreData = useSelector((state) => state.userStore);
-  const { isAuthenticated } = userStoreData;
+  const dispatch = useDispatch();
+  const { data: session } = useSession();
+
   useEffect(() => {
-    if (isAuthenticated) {
+    if (session?.user) {
       router.replace('/dashboard');
     }
-  }, [isAuthenticated]);
-  const [loginService, { isLoading }] = useLoginServiceMutation();
+  }, [session?.user, router]);
+
   const {
     register,
     handleSubmit,
@@ -45,17 +46,24 @@ const SignIn = () => {
   });
   const onSubmit = async (formData) => {
     try {
-      const response = await loginService(formData).unwrap();
-      if (response?.success) {
-        toast.success('Sign in successfully', {
-          description: 'You are being redirected to your dashboard.',
-        });
-        router.push('/dashboard');
+      const { data, error } = await signIn.email({
+        email: formData.email,
+        password: formData.password,
+        rememberMe: true,
+      });
+
+      if (error) {
+        throw error;
       }
+
+      toast.success('Sign in successfully', {
+        description: 'You are being redirected to your dashboard.',
+      });
+      router.push('/dashboard');
       reset();
     } catch (err) {
-      const status = err?.status || err?.data?.statusCode;
-      const message = err?.data?.message || 'Something went wrong';
+      const status = err?.status || err?.statusCode;
+      const message = err?.message || 'Something went wrong';
       if (status === 400) {
         toast.error(message || 'Invalid input');
       } else if (status === 500) {
@@ -108,14 +116,14 @@ const SignIn = () => {
             errors={errors}
             name='password'
             render={({ message }) => {
-              <p className='text-red-500 text-xs'>{message}</p>;
+              return <p className='text-red-500 text-xs'>{message}</p>;
             }}
           />
         </div>
         <Button
           type='submit'
           className='w-full'
-          disabled={isLoading || isSubmitting}
+          disabled={isSubmitting}
         >
           Sign In
         </Button>

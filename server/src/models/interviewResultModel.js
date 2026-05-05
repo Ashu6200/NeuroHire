@@ -13,8 +13,7 @@ const QASchema = new mongoose.Schema({
 const interviewResultSchema = new mongoose.Schema(
   {
     userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      type: String,
       required: true,
     },
     mockInterviewId: {
@@ -26,7 +25,7 @@ const interviewResultSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
-    stateAt: {
+    startAt: {
       type: Date,
       required: true,
     },
@@ -42,9 +41,10 @@ const interviewResultSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    skillAssingment: {
-      type: Object,
-      required: true,
+    skillAssignment: {
+      communicationScore: { type: Number, default: 0 },
+      technicalDepthScore: { type: Number, default: 0 },
+      starMethodScore: { type: Number, default: 0 },
     },
     qa: [QASchema],
   },

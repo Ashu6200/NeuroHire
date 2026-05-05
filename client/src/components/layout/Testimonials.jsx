@@ -35,23 +35,24 @@ export default function CustomerTestimonialsMasonry({ testimonials }) {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
-      <div className="flex justify-center mb-2">
+    <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8 lg:py-24">
+      <div className="flex justify-center mb-6">
         <Button
           variant="outline"
           size="sm"
-          className="flex items-center gap-2"
-          disable="true"
+          className="flex items-center gap-2 pointer-events-none"
         >
           {testimonials.sectionName}
         </Button>
       </div>
 
-      <h1 className="text-4xl md:text-5xl font-bold text-center mb-4">
+      <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-4">
         {testimonials.title}
       </h1>
 
-      <p className="text-center text-lg mb-12">{testimonials.subTitle}</p>
+      <p className="mx-auto max-w-2xl text-center text-base sm:text-lg mb-10 text-muted-foreground">
+        {testimonials.subTitle}
+      </p>
 
       <div ref={containerRef} className="flex gap-2">
         {getColumnTestimonials().map((columnItems, columnIndex) => (

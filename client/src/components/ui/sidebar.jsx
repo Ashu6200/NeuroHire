@@ -142,7 +142,10 @@ function Sidebar({
   children,
   ...props
 }) {
-  const { isMobile, state, openMobile, setOpenMobile } = useSidebar();
+  const { isMobile, state: sidebarState, openMobile, setOpenMobile } =
+    useSidebar();
+  const [isHovered, setIsHovered] = React.useState(false);
+  const state = isHovered ? "expanded" : sidebarState;
 
   if (collapsible === "none") {
     return (
@@ -190,6 +193,13 @@ function Sidebar({
       data-variant={variant}
       data-side={side}
       data-slot="sidebar"
+      onMouseOver={(event) => {
+        const isOverHeaderOrContent = !!event.target.closest(
+          '[data-sidebar="header"], [data-sidebar="content"]'
+        );
+        setIsHovered(isOverHeaderOrContent);
+      }}
+      onMouseLeave={() => setIsHovered(false)}
     >
       {/* This is what handles the sidebar gap on desktop */}
       <div

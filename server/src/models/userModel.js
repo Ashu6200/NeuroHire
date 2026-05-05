@@ -1,13 +1,21 @@
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const { default: mongoose } = require('mongoose');
-const { config } = require('../config/config');
 
 const UserSchema = new mongoose.Schema(
   {
+    id: {
+      type: String,
+      unique: true,
+    },
+    emailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    image: {
+      type: String,
+      default: null,
+    },
     name: {
       type: String,
-      required: [true, 'Please add a name'],
       trim: true,
       maxlength: [50, 'Name cannot be more than 50 characters'],
     },
@@ -21,25 +29,35 @@ const UserSchema = new mongoose.Schema(
       ],
       lowercase: true,
     },
-    password: {
-      type: String,
-      required: [true, 'Please add a password'],
-      minlength: [6, 'Password must be at least 6 characters'],
-    },
     role: {
       type: String,
-      enum: ['user', 'admin'],
+      enum: ['user', 'support', 'billing_admin', 'admin', 'super_admin'],
       default: 'user',
     },
-    isVerified: {
-      type: Boolean,
-      default: false,
+    permissions: {
+      type: [String],
+      default: [],
     },
-    verificationCode: {
+    subscriptionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Subscription',
+      default: null,
+    },
+    plan: {
+      type: String,
+      enum: ['free', 'pro', 'max'],
+      default: 'free',
+    },
+    razorpayCustomerId: {
       type: String,
       default: null,
     },
-    verificationCodeExpiry: {
+    status: {
+      type: String,
+      enum: ['active', 'suspended', 'deleted'],
+      default: 'active',
+    },
+    lastLoginAt: {
       type: Date,
       default: null,
     },
@@ -50,25 +68,5 @@ const UserSchema = new mongoose.Schema(
     toObject: { virtuals: true },
   }
 );
-UserSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) {
-    next();
-  }
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-});
-
-UserSchema.methods.matchPassword = async function (enteredPassword) {
-  if (!enteredPassword || !this.password) {
-    throw new Error('Missing password fields for comparison');
-  }
-  return await bcrypt.compare(enteredPassword, this.password);
-};
-
-UserSchema.methods.getSignedJwtToken = function () {
-  return jwt.sign({ id: this._id }, config.JWT_SECRET, {
-    expiresIn: config.JWT_EXPIRE,
-  });
-};
 const UserModel = mongoose.model('User', UserSchema);
 module.exports = UserModel;

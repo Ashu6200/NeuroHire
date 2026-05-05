@@ -3,24 +3,26 @@ import { Button } from "../ui/button";
 
 const WhyUse = ({ whyUse }) => {
   return (
-    <section className="">
-      <div className="mx-auto px-4 py-16 lg:px-16 md:px-12 lg:py-24 2xl:max-w-[1400px]">
-        <div className="flex justify-center mb-2">
+    <section className="bg-accent/5">
+      <div className="mx-auto px-4 py-12 sm:px-6 md:px-12 lg:px-16 lg:py-24 2xl:max-w-[1400px]">
+        <div className="flex justify-center mb-6">
           <Button
             variant="outline"
             size="sm"
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 pointer-events-none"
           >
             {whyUse.sectionName}
           </Button>
         </div>
-        <div className="mb-10 md:mb-20">
-          <h2 className="mb-2 text-center text-3xl font-semibold lg:text-5xl">
+        <div className="mb-10 md:mb-16">
+          <h2 className="mb-4 text-center text-3xl font-bold sm:text-4xl lg:text-5xl">
             {whyUse.title}
           </h2>
-          <p className="text-center text-lg mb-12">{whyUse.subTitle}</p>
+          <p className="mx-auto max-w-2xl text-center text-base sm:text-lg text-muted-foreground">
+            {whyUse.subTitle}
+          </p>
         </div>
-        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {whyUse.reasons?.map((reason) => (
             <React.Fragment key={reason.title}>
               <div className="flex grow basis-0 flex-col rounded-md p-4 border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50">

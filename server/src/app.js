@@ -8,12 +8,25 @@ const http = require('http');
 const { Server } = require('socket.io');
 require('dotenv').config();
 const { limiter } = require('./helpers');
-const { apiResponse, apiError } = require('./utils');
+const { apiResponse, apiError, logger } = require('./utils');
 const { asyncHandler, errorHandler } = require('./middlewares');
 const { responseMessage } = require('./constants');
-const { userRouter, mockInterviewRouter } = require('./routes');
+const {
+  adminRouter,
+  billingRouter,
+  mockInterviewRouter,
+  notificationRouter,
+  resumeRouter,
+  supportRouter,
+  userRouter,
+} = require('./routes');
+const socketService = require('./services/socketService');
 const { default: helmet } = require('helmet');
 const { config } = require('./config/config');
+const { ApplicationEnvironment } = require('./constants');
+const { getAuthHandler } = require('./lib/auth');
+
+const isDev = config.ENV !== ApplicationEnvironment.PRODUCTION;
 
 const app = express();
 const server = http.createServer(app);
@@ -24,6 +37,7 @@ const io = new Server(server, {
 });
 
 app.set('io', io);
+socketService.init(io);
 app.use(helmet());
 app.use(
   cors({
@@ -31,7 +45,6 @@ app.use(
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: [
       'Content-Type',
-      'Authorization',
       'X-Requested-With',
       'Origin',
       'Accept',
@@ -40,9 +53,18 @@ app.use(
     credentials: true,
   }),
 );
+app.all(/^\/api\/auth\/.*/, async (req, res, next) => {
+  try {
+    const authHandler = await getAuthHandler();
+    return authHandler(req, res);
+  } catch (error) {
+    return next(error);
+  }
+});
+app.use('/api/v1/billing/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json());
 app.use(xss());
-app.use(morgan('dev'));
+app.use(morgan(isDev ? 'dev' : 'combined', { stream: logger.stream }));
 app.use(limiter);
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -61,6 +83,12 @@ app.get(
   }),
 );
 app.get(
+  '/api/live',
+  asyncHandler((req, res) => {
+    apiResponse(req, res, 200, 'NeuroHire API is live', { status: 'ok' });
+  }),
+);
+app.get(
   '/health',
   asyncHandler((req, res) => {
     const message = 'NeroHire API health check';
@@ -73,19 +101,13 @@ app.get(
 );
 
 app.use('/api/v1/users', userRouter);
+app.use('/api/v1/billing', billingRouter);
+app.use('/api/v1/admin', adminRouter);
 app.use('/api/v1/mock-interview', mockInterviewRouter);
-
-io.on('connection', (socket) => {
-  console.log('A user connected:', socket.id);
-  socket.on('joinRoom', (roomId) => {
-    socket.join(roomId);
-    console.log(`User ${socket.id} joined room: ${roomId}`);
-  });
-
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
-  });
-});
+app.use('/api/v1/resume', resumeRouter);
+app.use('/api/v1/notifications', notificationRouter);
+app.use('/api/v1/support', supportRouter);
+app.use('/api/v1/questions', require('./routes/questionRoutes'));
 
 app.use((req, _res, next) => {
   apiError(next, new Error(responseMessage.NOT_FOUND), req, 404);

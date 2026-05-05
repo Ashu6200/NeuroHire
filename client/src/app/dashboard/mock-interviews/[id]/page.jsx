@@ -137,7 +137,7 @@ const AiInterviewById = ({ params }) => {
                   <Button
                     size={'lg'}
                     variant={'outline'}
-                    onClick={() => router.push(`/interviewSession?id=${1}`)}
+                    onClick={() => router.push(`/dashboard/interviewSession?id=${id}`)}
                   >
                     Take Interview
                   </Button>

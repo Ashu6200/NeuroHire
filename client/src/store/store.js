@@ -1,17 +1,17 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import { neuroHireApi } from './apiService';
 import { setupListeners } from '@reduxjs/toolkit/query';
-import { userReducer } from './userFeature/userSlice';
+import { uiReducer } from './uiFeature/uiSlice';
 import { persistReducer, persistStore } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['userStore'],
+  whitelist: [],
 };
 const rootReducer = combineReducers({
-  userStore: userReducer,
+  uiStore: uiReducer,
   [neuroHireApi.reducerPath]: neuroHireApi.reducer,
 });
 

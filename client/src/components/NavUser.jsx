@@ -1,11 +1,12 @@
 'use client';
 
-import { ChevronsUpDown, LogOut } from 'lucide-react';
+import { ChevronsUpDown, LogOut, CreditCard, Sparkles } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -17,18 +18,25 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { useDispatch, useSelector } from 'react-redux';
-import { logout } from '@/store/userFeature/userSlice';
+import { useDispatch } from 'react-redux';
+import { signOut, useSession } from '@/lib/auth-client';
+import { useRouter } from 'next/navigation';
 
-export function NavUser() {
+export function NavUser({ plan = 'free' }) {
   const dispatch = useDispatch();
+  const router = useRouter();
   const { isMobile } = useSidebar();
-  const userStoreData = useSelector((state) => state.userStore);
-  const { user } = userStoreData;
+  const { data: session } = useSession();
+  const user = session?.user;
   const userDetails = {
     email: user?.email || '',
     name: user?.name || 'Candidate Name',
     avatar: '/layout/user-avatar.png',
+  };
+
+  const handleLogout = async () => {
+    await signOut();
+    router.push('/signIn');
   };
 
   return (
@@ -76,31 +84,27 @@ export function NavUser() {
                 </div>
               </div>
             </DropdownMenuLabel>
-            {/* <DropdownMenuSeparator />
+            {plan === 'free' && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem onClick={() => router.push('/pricing')}>
+                    <Sparkles className='mr-2 h-4 w-4 text-yellow-500' />
+                    Upgrade to Pro
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </>
+            )}
+            <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <Sparkles />
-                Upgrade to Pro
+              <DropdownMenuItem onClick={() => router.push('/dashboard/billing')}>
+                <CreditCard className='mr-2 h-4 w-4' />
+                Billing
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <BadgeCheck />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCard />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Bell />
-                Notifications
-              </DropdownMenuItem>
-            </DropdownMenuGroup> */}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => dispatch(logout())}>
-              <LogOut />
+            <DropdownMenuItem onClick={handleLogout}>
+              <LogOut className='mr-2 h-4 w-4' />
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>

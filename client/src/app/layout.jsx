@@ -21,8 +21,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang='en' suppressHydrationWarning={true}>
-      <body className={`${geistPoppins.variable} antialiased relative`}>
-        <div className={'blurSpot'}></div>
+      <body
+        className={`${geistPoppins.variable} antialiased`}
+        suppressHydrationWarning={true}
+      >
         <ThemeProvider attribute='class' defaultTheme='system' enableSystem>
           <StoreProvider>
             {children}

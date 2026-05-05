@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useCreateResumeMutation, useUpdateResumeMutation } from '@/store/resumeFeature/resumeService';
+import { toast } from 'sonner';
 import {
   Stage,
   Layer,
@@ -17,7 +19,7 @@ import {
 } from 'react-konva';
 
 /* ─────────────────────────── constants ─────────────────────────── */
-const CW = 794; // canvas width  (A4 portrait @ 96dpi)
+const CW = 794;// canvas width  (A4 portrait @ 96dpi)
 const CH = 1123; // canvas height
 
 const ZOOM_MIN = 0.1;

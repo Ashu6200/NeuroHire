@@ -3,16 +3,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { useRegisterServiceMutation } from '@/store/userFeature/userService';
 import { ErrorMessage } from '@hookform/error-message';
 import { yupResolver } from '@hookform/resolvers/yup';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { toast } from 'sonner';
 import * as yup from 'yup';
+import { signUp, useSession } from '@/lib/auth-client';
 
 const signUpSchema = yup.object({
   name: yup.string().required('Name is required'),
@@ -23,15 +23,16 @@ const signUpSchema = yup.object({
     .required('Password is required'),
 });
 const SignUp = () => {
-  const userStoreData = useSelector((state) => state.userStore);
-  const { isAuthenticated } = userStoreData;
+  const dispatch = useDispatch();
+  const { data: session } = useSession();
+  const router = useRouter();
+
   useEffect(() => {
-    if (isAuthenticated) {
+    if (session?.user) {
       router.replace('/dashboard');
     }
-  }, [isAuthenticated]);
-  const router = useRouter();
-  const [registerService, { isLoading }] = useRegisterServiceMutation();
+  }, [session?.user, router]);
+
   const {
     register,
     handleSubmit,
@@ -47,17 +48,24 @@ const SignUp = () => {
   });
   const onSubmit = async (formData) => {
     try {
-      const response = await registerService(formData).unwrap();
-      if (response?.success) {
-        toast.info('Account created successfully', {
-          description: 'Please verify your email. OTP has been sent.',
-        });
-        router.push('/verifyOtp');
+      const { data, error } = await signUp.email({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (error) {
+        throw error;
       }
+
+      toast.success('Account created successfully', {
+        description: 'You are being redirected to your dashboard.',
+      });
+      router.push('/dashboard');
       reset();
     } catch (err) {
-      const status = err?.status || err?.data?.statusCode;
-      const message = err?.data?.message || 'Something went wrong';
+      const status = err?.status || err?.statusCode;
+      const message = err?.message || 'Something went wrong';
 
       if (status === 400) {
         toast.error(message || 'Invalid input');
@@ -127,14 +135,14 @@ const SignUp = () => {
             errors={errors}
             name='password'
             render={({ message }) => {
-              <p className='text-red-500 text-xs'>{message}</p>;
+              return <p className='text-red-500 text-xs'>{message}</p>;
             }}
           />
         </div>
         <Button
           type='submit'
           className='w-full'
-          disabled={isSubmitting || isLoading}
+          disabled={isSubmitting}
         >
           Sign Up
         </Button>
