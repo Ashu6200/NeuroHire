@@ -49,6 +49,10 @@ const subscriptionSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    expiryNotifiedAt: {
+      type: Date,
+      default: null,
+    },
     metadata: {
       type: Object,
       default: {},

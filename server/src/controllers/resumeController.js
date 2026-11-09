@@ -199,22 +199,86 @@ const exportResumePdf = asyncHandler(async (req, res) => {
     throw new BaseError('PDF export not available. Please contact support.', 503);
   }
 
-  const doc = new PDFDocument({ size: 'A4', margin: 50 });
+  const doc = new PDFDocument({ 
+    size: 'A4', 
+    margin: 0, // Manual positioning from canvasState
+    info: {
+      Title: resume.title,
+      Author: req.user.name || 'NeuroHire User',
+    }
+  });
+
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `attachment; filename="${resume.title.replace(/[^a-z0-9]/gi, '_')}.pdf"`);
   doc.pipe(res);
 
-  doc.fontSize(20).font('Helvetica-Bold').text(resume.title, { align: 'center' });
-  doc.moveDown();
-  doc.fontSize(11).font('Helvetica').text(
-    'This resume was created with NeuroHire. Open in the Resume Builder to view the full visual layout.',
-    { align: 'center' },
-  );
-  doc.moveDown(2);
-  doc.fontSize(10).fillColor('#888').text(
-    `Exported on ${new Date().toLocaleDateString('en-IN')} | NeuroHire Resume Builder`,
-    { align: 'center' },
-  );
+  // canvasState is an array of blocks
+  const blocks = resume.canvasState || [];
+
+  // Sort blocks by Y position then X to have some order, though we use absolute positioning
+  blocks.forEach((block) => {
+    try {
+      const { type, x, y, width, height, fill, stroke, strokeWidth, opacity, rotation } = block;
+      
+      doc.save();
+      if (opacity !== undefined) doc.opacity(opacity);
+      if (rotation) doc.rotate(rotation, { origin: [x, y] });
+
+      if (type === 'text') {
+        const { content, fontSize, fontFamily, fontStyle, color, align } = block;
+        
+        // Map common fonts to PDF standard fonts if possible
+        let pdfFont = 'Helvetica';
+        if (fontFamily === 'Times New Roman' || fontFamily === 'Georgia') pdfFont = 'Times-Roman';
+        if (fontFamily === 'Courier New') pdfFont = 'Courier';
+        
+        if (fontStyle === 'bold') pdfFont += '-Bold';
+        else if (fontStyle === 'italic') pdfFont += '-Oblique';
+
+        doc.fillColor(color || '#000000')
+           .font(pdfFont)
+           .fontSize(fontSize || 12)
+           .text(content || '', x, y, {
+             width: width,
+             align: align || 'left',
+             lineGap: 2
+           });
+      } else if (type === 'rect' || type === 'rect-round') {
+        const cornerRadius = block.cornerRadius || 0;
+        if (cornerRadius > 0) {
+          doc.roundedRect(x, y, width, height, cornerRadius);
+        } else {
+          doc.rect(x, y, width, height);
+        }
+
+        if (fill && fill !== 'transparent') {
+          doc.fillColor(fill).fill();
+        }
+        if (stroke && stroke !== 'transparent') {
+          doc.lineWidth(strokeWidth || 1).strokeColor(stroke).stroke();
+        }
+      } else if (type === 'line' || type === 'arrow') {
+        const points = block.points || [];
+        if (points.length >= 4) {
+          doc.moveTo(x + points[0], y + points[1]);
+          for (let i = 2; i < points.length; i += 2) {
+            doc.lineTo(x + points[i], y + points[i+1]);
+          }
+          doc.lineWidth(strokeWidth || 1).strokeColor(stroke || fill || '#000000').stroke();
+        }
+      } else if (type === 'circle') {
+        const radius = block.radius || (width / 2);
+        doc.circle(x, y, radius);
+        if (fill && fill !== 'transparent') doc.fillColor(fill).fill();
+        if (stroke && stroke !== 'transparent') doc.lineWidth(strokeWidth || 1).strokeColor(stroke).stroke();
+      }
+
+      doc.restore();
+    } catch (err) {
+      console.error('Error rendering block to PDF:', err);
+    }
+  });
+
   doc.end();
 });
 

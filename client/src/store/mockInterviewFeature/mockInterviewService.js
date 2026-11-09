@@ -192,6 +192,24 @@ const mockInterviewService = neuroHireApi.injectEndpoints({
         credentials: 'include',
       }),
     }),
+    getDashboardStats: builder.query({
+      query: () => ({
+        url: '/mock-interview/stats',
+        credentials: 'include',
+      }),
+    }),
+    getAllUserInterviewResults: builder.query({
+      query: () => ({
+        url: '/mock-interview/all-results',
+        credentials: 'include',
+      }),
+    }),
+    getInterviewResultById: builder.query({
+      query: (id) => ({
+        url: `/mock-interview/result/${id}`,
+        credentials: 'include',
+      }),
+    }),
   }),
 });
 
@@ -208,4 +226,7 @@ export const {
   useGetJdMatchMutation,
   useSaveInterviewResultMutation,
   useGetInterviewResultsQuery,
+  useGetDashboardStatsQuery,
+  useGetAllUserInterviewResultsQuery,
+  useGetInterviewResultByIdQuery,
 } = mockInterviewService;

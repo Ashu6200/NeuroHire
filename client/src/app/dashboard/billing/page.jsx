@@ -10,6 +10,7 @@ import {
   useGetMyBillingQuery,
 } from '@/store/billingFeature/billingService';
 import { toast } from 'sonner';
+import SubscriptionPlanCard from '@/components/billing/SubscriptionPlanCard';
 
 const BillingPage = () => {
   const { data: billingData, isLoading: isBillingLoading } =
@@ -59,11 +60,20 @@ const BillingPage = () => {
         buttonText='View Pricing'
       />
 
+      {billing?.isExpiringSoon && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-center gap-3 text-amber-800">
+          <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+          <p className="text-sm font-medium">
+            Your premium subscription is ending in less than 3 days. Renew now to maintain your advanced features.
+          </p>
+        </div>
+      )}
+
       {isBillingLoading ? (
         <p className='text-sm text-muted-foreground'>Loading billing...</p>
       ) : (
         <div className='grid gap-4 lg:grid-cols-[1fr_1.2fr]'>
-          <Card className='rounded-lg'>
+          <Card className='rounded-lg border-2 shadow-sm'>
             <CardHeader>
               <CardTitle>Current Plan</CardTitle>
             </CardHeader>
@@ -108,27 +118,15 @@ const BillingPage = () => {
         </div>
       )}
 
-      <div className='grid gap-4 md:grid-cols-3'>
+      <div className='grid gap-6 md:grid-cols-3'>
         {plans.map((plan) => (
-          <Card key={plan.code} className='rounded-lg'>
-            <CardHeader>
-              <CardTitle>{plan.name}</CardTitle>
-            </CardHeader>
-            <CardContent className='flex flex-col gap-3 text-sm'>
-              <p>{plan.description}</p>
-              <p className='text-2xl font-bold'>
-                {plan.amount === 0
-                  ? 'Free'
-                  : plan.displayAmount || `₹${plan.amount / 100}`}
-              </p>
-              <Button
-                disabled={isCreating || billing?.plan?.code === plan.code}
-                onClick={() => handlePlan(plan.code)}
-              >
-                {billing?.plan?.code === plan.code ? 'Current Plan' : 'Select'}
-              </Button>
-            </CardContent>
-          </Card>
+          <SubscriptionPlanCard
+            key={plan.code}
+            plan={plan}
+            isCurrentPlan={billing?.plan?.code === plan.code}
+            onSelect={handlePlan}
+            isLoading={isCreating}
+          />
         ))}
       </div>
     </section>

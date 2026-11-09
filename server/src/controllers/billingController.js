@@ -33,6 +33,7 @@ const getMyBilling = asyncHandler(async (req, res) => {
     plan: entitlements.plan,
     usage: entitlements.usage,
     limits: entitlements.limits,
+    isExpiringSoon: entitlements.isExpiringSoon,
     payments,
   });
 });

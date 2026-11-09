@@ -12,83 +12,41 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowUpRight, Calendar, Search } from 'lucide-react';
+import { ArrowUpRight, Calendar, Search, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useGetAllUserInterviewResultsQuery } from '@/store/mockInterviewFeature/mockInterviewService';
+import { format, formatDistanceToNow } from 'date-fns';
 
-const Interview = () => {
+const InterviewHistoryPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const mockInterviews = [
-    {
-      id: '1',
-      jobProfile: {
-        id: 'jp1',
-        roleTitle: 'Frontend Developer',
-        companyName: 'Tech Corp',
-      },
-      date: '2025-05-10T14:30:00Z',
-      duration: 1845, // in seconds
-      score: 8.2,
-    },
-    {
-      id: '2',
-      jobProfile: {
-        id: 'jp2',
-        roleTitle: 'React Developer',
-        companyName: 'Startup Inc',
-      },
-      date: '2025-05-08T10:15:00Z',
-      duration: 2130, // in seconds
-      score: 7.5,
-    },
-    {
-      id: '3',
-      jobProfile: {
-        id: 'jp1',
-        roleTitle: 'Frontend Developer',
-        companyName: 'Tech Corp',
-      },
-      date: '2025-05-05T16:45:00Z',
-      duration: 1920, // in seconds
-      score: 6.9,
-    },
-    {
-      id: '4',
-      jobProfile: {
-        id: 'jp3',
-        roleTitle: 'Full Stack Engineer',
-        companyName: 'Enterprise Solutions',
-      },
-      date: '2025-05-01T09:30:00Z',
-      duration: 2250, // in seconds
-      score: 7.8,
-    },
-    {
-      id: '5',
-      jobProfile: {
-        id: 'jp1',
-        roleTitle: 'Frontend Developer',
-        companyName: 'Tech Corp',
-      },
-      date: '2025-04-25T11:00:00Z',
-      duration: 1800, // in seconds
-      score: 6.5,
-    },
-    {
-      id: '6',
-      jobProfile: {
-        id: 'jp2',
-        roleTitle: 'React Developer',
-        companyName: 'Startup Inc',
-      },
-      date: '2025-04-20T15:30:00Z',
-      duration: 1950, // in seconds
-      score: 7.2,
-    },
-  ];
-  const formatDuration = (seconds) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
+  const [roleFilter, setRoleFilter] = useState('all');
+  
+  const { data: resultsData, isLoading } = useGetAllUserInterviewResultsQuery();
+  const results = resultsData?.data?.results || [];
+
+  const filteredResults = useMemo(() => {
+    return results.filter((item) => {
+      const interview = item.mockInterviewId || {};
+      const matchesSearch = 
+        interview.role?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        interview.companyName?.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchesRole = roleFilter === 'all' || interview.role === roleFilter;
+      
+      return matchesSearch && matchesRole;
+    });
+  }, [results, searchQuery, roleFilter]);
+
+  const uniqueRoles = useMemo(() => {
+    const roles = new Set(results.map(r => r.mockInterviewId?.role).filter(Boolean));
+    return Array.from(roles);
+  }, [results]);
+
+  const formatDuration = (start, end) => {
+    const duration = (new Date(end) - new Date(start)) / 1000;
+    const minutes = Math.floor(duration / 60);
+    const remainingSeconds = Math.floor(duration % 60);
     return `${minutes}m ${remainingSeconds}s`;
   };
 
@@ -99,6 +57,7 @@ const Interview = () => {
       return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
     return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
   };
+
   return (
     <section className='p-4'>
       <CommonHeader
@@ -114,7 +73,7 @@ const Interview = () => {
             {'(Find specific interview sessions based on criteria.)'}
           </span>
         </h1>
-        <div className='grid grid-cols-1 md:grid-cols-3 gap-4 mt-2'>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mt-2'>
           <div className='relative'>
             <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
             <Input
@@ -124,29 +83,17 @@ const Interview = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Select>
+          <Select value={roleFilter} onValueChange={setRoleFilter}>
             <SelectTrigger className='w-full'>
               <SelectValue placeholder='Filter by role' />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value='all'>All Roles</SelectItem>
-              {/* {uniqueJobProfiles.map((profile) => (
-                <SelectItem key={profile.id} value={profile.id}>
-                  {profile.title}
+              {uniqueRoles.map((role) => (
+                <SelectItem key={role} value={role}>
+                  {role}
                 </SelectItem>
-              ))} */}
-            </SelectContent>
-          </Select>
-          <Select>
-            <SelectTrigger className='w-full'>
-              <Calendar className='mr-2 h-4 w-4' />
-              <SelectValue placeholder='Filter by date' />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value='all'>All Time</SelectItem>
-              <SelectItem value='week'>Last 7 Days</SelectItem>
-              <SelectItem value='month'>Last 30 Days</SelectItem>
-              <SelectItem value='3months'>Last 3 Months</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -157,14 +104,18 @@ const Interview = () => {
           <TabsTrigger value='calendar'>Calendar View</TabsTrigger>
         </TabsList>
         <TabsContent value='list' className='space-y-4'>
-          {mockInterviews.length === 0 ? (
+          {isLoading ? (
+            <div className='flex justify-center py-20'>
+              <Loader2 className='h-8 w-8 animate-spin text-primary' />
+            </div>
+          ) : filteredResults.length === 0 ? (
             <Card>
               <CardContent className='text-center py-10'>
                 <p className='text-muted-foreground mb-4'>
                   No interview sessions found matching your criteria.
                 </p>
                 <Button asChild>
-                  <Link href='/dashboard/job-profiles/new'>
+                  <Link href='/dashboard/create-mock-interview'>
                     Start a New Interview
                   </Link>
                 </Button>
@@ -172,25 +123,27 @@ const Interview = () => {
             </Card>
           ) : (
             <div className='space-y-4'>
-              {mockInterviews.map((interview) => (
+              {filteredResults.map((result) => (
                 <div
-                  key={interview.id}
+                  key={result._id}
                   className='flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-lg border dark:bg-input/30 bg-background'
                 >
                   <div className='space-y-1'>
                     <div className='flex items-center gap-2'>
                       <h3 className='font-medium'>
-                        {interview.jobProfile.roleTitle}
+                        {result.mockInterviewId?.role || 'Deleted Mock Interview'}
                       </h3>
-                      <Badge variant='outline'>
-                        {interview.jobProfile.companyName}
-                      </Badge>
+                      {result.mockInterviewId?.companyName && (
+                        <Badge variant='outline'>
+                          {result.mockInterviewId.companyName}
+                        </Badge>
+                      )}
                     </div>
                     <div className='text-sm text-muted-foreground'>
-                      {/* {formatDistanceToNow(new Date(interview.date), {
+                      {formatDistanceToNow(new Date(result.createdAt), {
                         addSuffix: true,
                       })}{" "}
-                      ({format(new Date(interview.date), "MMM d, yyyy")}) */}
+                      ({format(new Date(result.createdAt), "MMM d, yyyy")})
                     </div>
                   </div>
                   <div className='flex items-center gap-4 mt-2 sm:mt-0'>
@@ -199,20 +152,20 @@ const Interview = () => {
                         Duration:
                       </div>
                       <div className='font-medium'>
-                        {formatDuration(interview.duration)}
+                        {formatDuration(result.startAt, result.endAt)}
                       </div>
                     </div>
                     <div className='flex items-center gap-2'>
                       <div className='text-sm text-muted-foreground'>
                         Score:
                       </div>
-                      <Badge className={getScoreColor(interview.score)}>
-                        {interview.score.toFixed(1)}/10
+                      <Badge className={getScoreColor(result.totalScore)}>
+                        {result.totalScore?.toFixed(1)}/10
                       </Badge>
                     </div>
                     <Button variant='ghost' size='icon' asChild>
                       <Link
-                        href={`/dashboard/interview-history/${interview.id}`}
+                        href={`/dashboard/interview-history/${result._id}`}
                       >
                         <ArrowUpRight className='h-4 w-4' />
                         <span className='sr-only'>View details</span>
@@ -238,4 +191,4 @@ const Interview = () => {
   );
 };
 
-export default Interview;
+export default InterviewHistoryPage;

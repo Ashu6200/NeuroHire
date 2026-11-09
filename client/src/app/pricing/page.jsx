@@ -8,6 +8,7 @@ import {
 } from '@/store/billingFeature/billingService';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import SubscriptionPlanCard from '@/components/billing/SubscriptionPlanCard';
 
 const PricingPage = () => {
   const { data, isLoading } = useGetBillingPlansQuery();
@@ -43,49 +44,22 @@ const PricingPage = () => {
           </p>
         </div>
 
-        <div className='grid gap-4 md:grid-cols-3'>
-          {isLoading && <p className='text-sm'>Loading plans...</p>}
+        <div className='grid gap-8 md:grid-cols-3 pt-6'>
+          {isLoading && (
+            <div className="col-span-full flex justify-center py-12">
+              <div className="flex flex-col items-center gap-2">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                <p className='text-sm text-muted-foreground'>Fetching best plans for you...</p>
+              </div>
+            </div>
+          )}
           {plans.map((plan) => (
-            <Card key={plan.code} className='rounded-lg'>
-              <CardHeader>
-                <CardTitle>{plan.name}</CardTitle>
-                <p className='text-sm text-muted-foreground'>
-                  {plan.description}
-                </p>
-              </CardHeader>
-              <CardContent className='flex flex-col gap-4'>
-                <div>
-                  <span className='text-3xl font-bold'>
-                    {plan.amount === 0
-                      ? 'Free'
-                      : plan.displayAmount || `₹${plan.amount / 100}`}
-                  </span>
-                  {plan.amount > 0 && (
-                    <span className='text-sm text-muted-foreground'>
-                      {' '}
-                      / month
-                    </span>
-                  )}
-                </div>
-                <ul className='flex flex-col gap-2 text-sm'>
-                  {plan.features.map((feature) => (
-                    <li key={feature}>{feature}</li>
-                  ))}
-                </ul>
-                {plan.code === 'free' ? (
-                  <Button asChild variant='outline'>
-                    <Link href='/signUp'>Start Free</Link>
-                  </Button>
-                ) : (
-                  <Button
-                    disabled={isCreating}
-                    onClick={() => handlePlan(plan.code)}
-                  >
-                    Upgrade to {plan.name}
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
+            <SubscriptionPlanCard
+              key={plan.code}
+              plan={plan}
+              onSelect={handlePlan}
+              isLoading={isCreating}
+            />
           ))}
         </div>
       </section>

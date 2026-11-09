@@ -10,6 +10,21 @@ mockInterviewRouter.get(
   protect,
   mockInterviewController.getAllMockInterviews
 );
+mockInterviewRouter.get(
+  '/stats',
+  protect,
+  mockInterviewController.getDashboardStats
+);
+mockInterviewRouter.get(
+  '/all-results',
+  protect,
+  mockInterviewController.getAllUserInterviewResults
+);
+mockInterviewRouter.get(
+  '/result/:id',
+  protect,
+  mockInterviewController.getResultById
+);
 mockInterviewRouter.post(
   '/jd-match',
   protect,

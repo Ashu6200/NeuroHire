@@ -288,6 +288,68 @@ const getInterviewResults = asyncHandler(async (req, res) => {
   return apiResponse(req, res, 200, 'Results fetched successfully', { results, interview });
 });
 
+const getDashboardStats = asyncHandler(async (req, res) => {
+  const results = await InterviewResult.find({ userId: req.user.id });
+
+  const totalInterviews = results.length;
+  let totalPracticeTime = 0; // in seconds
+  let totalScoreSum = 0;
+
+  results.forEach((r) => {
+    const duration = (new Date(r.endAt) - new Date(r.startAt)) / 1000;
+    if (duration > 0) {
+      totalPracticeTime += duration;
+    }
+    totalScoreSum += r.totalScore;
+  });
+
+  const averageScore = totalInterviews > 0 ? (totalScoreSum / totalInterviews).toFixed(1) : 0;
+
+  // Improvement rate: compare last score with first score
+  let improvementRate = 0;
+  if (totalInterviews >= 2) {
+    const sorted = [...results].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    const firstScore = sorted[0].totalScore;
+    const lastScore = sorted[sorted.length - 1].totalScore;
+    if (firstScore > 0) {
+      improvementRate = (((lastScore - firstScore) / firstScore) * 100).toFixed(1);
+    }
+  }
+
+  return apiResponse(req, res, 200, 'Dashboard stats fetched successfully', {
+    stats: {
+      totalInterviews,
+      totalPracticeTime: Math.floor(totalPracticeTime),
+      averageScore: Number(averageScore),
+      improvementRate: Number(improvementRate),
+    }
+  });
+});
+
+const getAllUserInterviewResults = asyncHandler(async (req, res) => {
+  const results = await InterviewResult.find({ userId: req.user.id })
+    .populate('mockInterviewId', 'title role companyName')
+    .sort({ createdAt: -1 });
+
+  return apiResponse(req, res, 200, 'All interview results fetched successfully', { results });
+});
+
+const getResultById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new BaseError('Invalid result ID format', 400);
+  }
+
+  const result = await InterviewResult.findById(id).populate('mockInterviewId');
+  if (!result) throw new BaseError('Interview result not found', 404);
+
+  if (result.userId.toString() !== req.user.id) {
+    throw new BaseError('Not authorized to view this result', 403);
+  }
+
+  return apiResponse(req, res, 200, 'Interview result fetched successfully', { result });
+});
+
 const mockInterviewController = {
   createMockInterview,
   updateMockInterview,
@@ -301,6 +363,9 @@ const mockInterviewController = {
   getJdMatch,
   saveInterviewResult,
   getInterviewResults,
+  getDashboardStats,
+  getAllUserInterviewResults,
+  getResultById,
 };
 
 module.exports = mockInterviewController;

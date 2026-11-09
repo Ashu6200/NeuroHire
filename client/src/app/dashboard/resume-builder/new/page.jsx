@@ -924,7 +924,6 @@ export default function NewResume() {
   /* render each Konva block */
   const renderBlock = (b) => {
     const common = {
-      key: b.id,
       id: b.id,
       x: b.x,
       y: b.y,
@@ -966,6 +965,7 @@ export default function NewResume() {
       case 'text':
         return (
           <Text
+            key={b.id}
             {...common}
             width={b.width}
             height={b.height}
@@ -984,6 +984,7 @@ export default function NewResume() {
           <React.Fragment key={b.id}>
             {!b.src && (
               <Rect
+                key={`${b.id}-placeholder`}
                 {...common}
                 width={b.width}
                 height={b.height}
@@ -995,6 +996,7 @@ export default function NewResume() {
             )}
             {b.src && (
               <KonvaImageBlock
+                key={b.id}
                 block={b}
                 {...common}
                 width={b.width}
@@ -1007,6 +1009,7 @@ export default function NewResume() {
       case 'rect-round':
         return (
           <Rect
+            key={b.id}
             {...common}
             width={b.width}
             height={b.height}
@@ -1019,6 +1022,7 @@ export default function NewResume() {
       case 'circle':
         return (
           <Circle
+            key={b.id}
             {...common}
             radius={b.radius || 50}
             fill={b.fill}
@@ -1029,6 +1033,7 @@ export default function NewResume() {
       case 'ellipse':
         return (
           <Ellipse
+            key={b.id}
             {...common}
             radiusX={b.radiusX || 80}
             radiusY={b.radiusY || 40}
@@ -1042,6 +1047,7 @@ export default function NewResume() {
       case 'hexagon':
         return (
           <RegularPolygon
+            key={b.id}
             {...common}
             sides={b.sides}
             radius={b.radius || 55}
@@ -1053,6 +1059,7 @@ export default function NewResume() {
       case 'star':
         return (
           <Star
+            key={b.id}
             {...common}
             numPoints={b.numPoints || 5}
             innerRadius={b.innerRadius || 25}
@@ -1065,6 +1072,7 @@ export default function NewResume() {
       case 'line':
         return (
           <Line
+            key={b.id}
             {...common}
             points={b.points || [0, 0, 160, 0]}
             stroke={b.stroke || b.fill || '#0f172a'}
@@ -1074,6 +1082,7 @@ export default function NewResume() {
       case 'arrow':
         return (
           <Arrow
+            key={b.id}
             {...common}
             points={b.points || [0, 0, 160, 0]}
             stroke={b.stroke || '#0f172a'}

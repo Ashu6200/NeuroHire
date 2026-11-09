@@ -5,6 +5,9 @@ const {
   UsageModel,
   UserModel,
 } = require('../models');
+const { notifyPlanExpiring } = require('./notificationService');
+const { sendSubscriptionExpiryWarning } = require('./mailService');
+const logger = require('../utils/logger');
 
 const getPeriodKey = (date = new Date()) => {
   const year = date.getUTCFullYear();
@@ -51,11 +54,21 @@ const ensureSubscriptionForUser = async (userId, user = null) => {
   const now = new Date();
   let subscription = await SubscriptionModel.findOne({
     userId,
-    status: { $in: ['active', 'pending'] },
+    status: { $in: ['active', 'pending', 'cancelled'] },
     currentPeriodEnd: { $gt: now },
   }).sort({ createdAt: -1 });
 
   if (!subscription) {
+    // Mark any existing active/cancelled subscriptions that have passed their end date as expired
+    await SubscriptionModel.updateMany(
+      {
+        userId,
+        status: { $in: ['active', 'cancelled'] },
+        currentPeriodEnd: { $lte: now },
+      },
+      { $set: { status: 'expired' } },
+    );
+
     subscription = await SubscriptionModel.create({
       userId,
       planCode: PLAN_CODES.FREE,
@@ -106,11 +119,43 @@ const getEntitlementsForUser = async (user) => {
   const plan = PLAN_CATALOG[subscription.planCode] || PLAN_CATALOG.free;
   const usage = await getUsageForUser(user.id, subscription.planCode, subscription._id, subscription.currentPeriodStart);
 
+  const now = new Date();
+  const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+  const isExpiringSoon = 
+    subscription.planCode !== PLAN_CODES.FREE && 
+    subscription.currentPeriodEnd <= threeDaysFromNow;
+
+  // Trigger notification if expiring soon and not notified in the last 24 hours
+  if (isExpiringSoon && user?.email) {
+    const lastNotified = subscription.expiryNotifiedAt;
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+    if (!lastNotified || lastNotified < oneDayAgo) {
+      const daysLeft = Math.ceil((subscription.currentPeriodEnd - now) / (1000 * 60 * 60 * 24));
+      
+      // Fire and forget notifications to not block the response
+      (async () => {
+        try {
+          await notifyPlanExpiring(user.id, daysLeft);
+          await sendSubscriptionExpiryWarning(user, daysLeft);
+          
+          await SubscriptionModel.updateOne(
+            { _id: subscription._id },
+            { $set: { expiryNotifiedAt: new Date() } }
+          );
+        } catch (err) {
+          logger.error('Failed to send expiry notification', { userId: user.id, error: err.message });
+        }
+      })();
+    }
+  }
+
   return {
     subscription,
     plan,
     usage,
     limits: plan.limits,
+    isExpiringSoon,
   };
 };
 

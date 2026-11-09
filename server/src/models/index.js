@@ -10,6 +10,7 @@ const NotificationModel = require('./notificationModel');
 const SupportTicketModel = require('./supportTicketModel');
 const QuestionModel = require('./questionModel');
 const UserProgressModel = require('./userProgressModel');
+const InterviewResultModel = require('./interviewResultModel');
 
 module.exports = {
   AuditLogModel,
@@ -24,4 +25,5 @@ module.exports = {
   UserModel,
   QuestionModel,
   UserProgressModel,
+  InterviewResultModel,
 };
